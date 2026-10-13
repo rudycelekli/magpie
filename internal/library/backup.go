@@ -1,12 +1,14 @@
 package library
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -95,21 +97,85 @@ func (b *backups) keep(agent, path string) error {
 // folder set aside (a skill taken out of the library, or an agent's own
 // the library's took the place of): that is the only copy of it left.
 func pruneBackups() {
-	es, err := os.ReadDir(BackupDir())
+	dir := BackupDir()
+	es, err := os.ReadDir(dir)
 	if err != nil {
 		return
 	}
-	var names []string
+	pruneBackupDirs(dir, es)
+}
+
+// pruneBackupDirs orders the directories by their absolute modification
+// times, not their local-clock names, which can go backwards at a time-zone
+// change or the end of daylight saving. Unknown times leave all copies alone.
+func pruneBackupDirs(dir string, es []fs.DirEntry) {
+	type backup struct {
+		name     string
+		modified time.Time
+	}
+	var dirs []backup
 	for _, e := range es {
-		if e.IsDir() && !strings.HasPrefix(e.Name(), ".") && !holdsSkills(filepath.Join(BackupDir(), e.Name())) {
-			names = append(names, e.Name())
+		if !e.IsDir() || strings.HasPrefix(e.Name(), ".") || holdsSkills(filepath.Join(dir, e.Name())) {
+			continue
 		}
+		info, err := e.Info()
+		if err != nil {
+			return
+		}
+		dirs = append(dirs, backup{e.Name(), info.ModTime()})
 	}
-	slices.Sort(names)
-	for len(names) > keepBackups {
-		os.RemoveAll(filepath.Join(BackupDir(), names[0]))
-		names = names[1:]
+	slices.SortFunc(dirs, func(a, b backup) int {
+		if order := a.modified.Compare(b.modified); order != 0 {
+			return order
+		}
+		// A coarse filesystem clock can give several changes the same time.
+		// For a shared name's millisecond, -10 follows -2, not the reverse.
+		as, an, aok := backupSequence(a.name)
+		bs, bn, bok := backupSequence(b.name)
+		if !aok {
+			as = a.name
+		}
+		if !bok {
+			bs = b.name
+		}
+		if order := strings.Compare(as, bs); order != 0 {
+			return order
+		}
+		if aok && bok {
+			if order := cmp.Compare(an, bn); order != 0 {
+				return order
+			}
+		}
+		return strings.Compare(a.name, b.name)
+	})
+	for len(dirs) > keepBackups {
+		if err := os.RemoveAll(filepath.Join(dir, dirs[0].name)); err != nil {
+			return
+		}
+		dirs = dirs[1:]
 	}
+}
+
+// backupSequence reads freshBackup's collision suffix, leaving other folder
+// names to their ordinary deterministic ordering when their times tie.
+func backupSequence(name string) (string, uint64, bool) {
+	const stampSize = len("2006-01-02_15-04-05.000")
+	if len(name) < stampSize {
+		return "", 0, false
+	}
+	stamp := name[:stampSize]
+	if _, err := time.Parse("2006-01-02_15-04-05.000", stamp); err != nil {
+		return "", 0, false
+	}
+	if len(name) == stampSize {
+		return stamp, 1, true
+	}
+	suffix, ok := strings.CutPrefix(name[stampSize:], "-")
+	if !ok {
+		return "", 0, false
+	}
+	n, err := strconv.ParseUint(suffix, 10, 64)
+	return stamp, n, err == nil && n >= 2
 }
 
 // holdsSkills is whether a backup has skill folders in it: <when>/skills,
