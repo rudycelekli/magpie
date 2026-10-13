@@ -28,14 +28,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 180
     steps:
+      - name: Preserve exact checkout bytes
+        shell: bash
+        run: git config --global core.autocrlf false
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: ${{ github.sha }}
           path: harness
           persist-credentials: false
-      - name: Preserve exact source bytes
-        shell: bash
-        run: git config --global core.autocrlf false
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: ${{ matrix.head }}

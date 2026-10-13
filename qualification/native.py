@@ -59,7 +59,11 @@ try:
  (proof/'environment.json').write_text(json.dumps(environment,indent=2))
  if head!=expected['head'] or tree!=expected['tree'] or git('status','--porcelain','--untracked-files=all'):raise RuntimeError('Source identity or cleanliness mismatch')
  fixture=harness/'backup-retention-fixture.go'
- if hashlib.sha256(fixture.read_bytes()).hexdigest()!=manifest['fixture_sha256']:raise RuntimeError('Reviewed fixture hash mismatch')
+ fixture_bytes=fixture.read_bytes()
+ fixture_blob=subprocess.check_output(['git','show','HEAD:qualification/backup-retention-fixture.go'],cwd=harness)
+ fixture_receipt={'expected_sha256':manifest['fixture_sha256'],'actual_sha256':hashlib.sha256(fixture_bytes).hexdigest(),'git_blob_sha256':hashlib.sha256(fixture_blob).hexdigest(),'actual_bytes':len(fixture_bytes),'git_blob_bytes':len(fixture_blob),'actual_crlf_count':fixture_bytes.count(b'\r\n'),'git_blob_crlf_count':fixture_blob.count(b'\r\n')}
+ (proof/'fixture-bytes.json').write_text(json.dumps(fixture_receipt,indent=2))
+ if fixture_bytes!=fixture_blob or fixture_receipt['actual_sha256']!=manifest['fixture_sha256']:raise RuntimeError('Reviewed fixture hash mismatch')
  if a.phase=='fixed':
   for name,digest in manifest['source_files_sha256'].items():
    if hashlib.sha256((source/name).read_bytes()).hexdigest()!=digest:raise RuntimeError('Fixed source bytes mismatch: '+name)
