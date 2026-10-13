@@ -1,0 +1,59 @@
+{
+  "repo": "rudycelekli/magpie",
+  "go_version": "go1.26.8",
+  "bun_version": "1.4.2",
+  "phases": {
+    "baseline": {
+      "head": "1133ca0fe21fcf86f57d5c12612d8d9e691bec85",
+      "tree": "0fbb9939e9ea1f99a0abf748b794f7d647bbdbe2"
+    },
+    "fixed": {
+      "head": "9f31dffd329ff42443840c5ba37a5289def41ed9",
+      "tree": "8519f27bc8254df390e1bb1cbec36e807fbf55b9"
+    }
+  },
+  "source_files_sha256": {
+    "docs/subsystems/library.md": "66efee8bab6d973076b02ca763a1d065d49a9c7d0115ad89a8d13caca21c0e5a",
+    "internal/library/backup.go": "07d30e7df243f0a1fbfe5c3dd5152e479a64c106a3994c835251053108e1367f",
+    "internal/library/backup_retention_test.go": "2a4d38a7cdd63a0bb43a7d508d225b66bc1f27615801283f22140c4f122b9acc"
+  },
+  "fixture_sha256": "2a4d38a7cdd63a0bb43a7d508d225b66bc1f27615801283f22140c4f122b9acc",
+  "new_test_names": [
+    "TestBackupRetentionUsesAbsoluteTime",
+    "TestBackupRetentionUsesAbsoluteTime/DST_fallback",
+    "TestBackupRetentionUsesAbsoluteTime/time_zone_changed",
+    "TestBackupRetentionEqualTimesKeepNumericNewest",
+    "TestBackupRetentionEqualTimesAreDeterministic",
+    "TestBackupRetentionEqualTimesAreDeterministic/false",
+    "TestBackupRetentionEqualTimesAreDeterministic/true",
+    "TestBackupRetentionUnknownTimeLeavesCopiesAlone",
+    "TestBackupRetentionKeepsSkillsHiddenAndFiles"
+  ],
+  "baseline_focused_fail": [
+    "TestBackupRetentionUsesAbsoluteTime",
+    "TestBackupRetentionUsesAbsoluteTime/DST_fallback",
+    "TestBackupRetentionUsesAbsoluteTime/time_zone_changed",
+    "TestBackupRetentionEqualTimesKeepNumericNewest"
+  ],
+  "baseline_focused_pass": [
+    "TestBackupRetentionKeepsSkillsHiddenAndFiles"
+  ],
+  "package": "github.com/yetone/magpie/internal/library",
+  "baseline_fixture_ast": {
+    "fixture_sha256": "f1144cbd20a77c98cd6f8b5a9993058666c1ace28fa84ad0c11a38f47c3536cd",
+    "input_sha256": "2a4d38a7cdd63a0bb43a7d508d225b66bc1f27615801283f22140c4f122b9acc",
+    "literal_function_sha256": {
+      "TestBackupRetentionEqualTimesKeepNumericNewest": "374d733eaa72cd0d97ab9410969d47240bdca298435ff0f67b5ce7925c2ae3de",
+      "TestBackupRetentionKeepsSkillsHiddenAndFiles": "e95fd014b8988991c8602c48b8528c3da5f15ffab0d173d128fba06f26615a1e",
+      "TestBackupRetentionUsesAbsoluteTime": "d95a59637b44aef7d13e68112c9c8d4130ae832479fedb735469ea8148c6ad78",
+      "retentionCopies": "41dae61ca936b50a425c107ba0dbee289bae7a07a21f1093529109bcd59e1681"
+    },
+    "methods": [
+      "retentionCopies",
+      "TestBackupRetentionUsesAbsoluteTime",
+      "TestBackupRetentionEqualTimesKeepNumericNewest",
+      "TestBackupRetentionKeepsSkillsHiddenAndFiles"
+    ],
+    "production_changes": false
+  }
+}
